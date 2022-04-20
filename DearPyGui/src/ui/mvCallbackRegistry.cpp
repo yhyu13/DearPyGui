@@ -161,65 +161,9 @@ void mvRunCallback(PyObject* callable, const std::string& sender, PyObject* app_
 		if (ac) {
 			i32 count = PyLong_AsLong(ac);
 
-			if (PyMethod_Check(callable))
-				count--;
-
-			if (PyInstanceMethod_Check(callable))
-				count--;
-
-			if (count > 3)
+			if (count == 0)
 			{
-				mvPyObject pArgs(PyTuple_New(count));
-				PyTuple_SetItem(pArgs, 0, ToPyString(sender));
-				PyTuple_SetItem(pArgs, 1, app_data); // steals data, so don't deref
-				PyTuple_SetItem(pArgs, 2, user_data); // steals data, so don't deref
-
-				for (int i = 3; i < count; i++)
-					PyTuple_SetItem(pArgs, i, GetPyNone());
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
-				//mvPyObject result(PyObject_CallMethodObjArgs(callable, pArgs));
-
-				// check if call succeeded
-				if (!result.isOk())
-					PyErr_Print();
-
-			}
-			else if (count == 3)
-			{
-				mvPyObject pArgs(PyTuple_New(3));
-				PyTuple_SetItem(pArgs, 0, ToPyString(sender));
-				PyTuple_SetItem(pArgs, 1, app_data); // steals data, so don't deref
-				PyTuple_SetItem(pArgs, 2, user_data); // steals data, so don't deref
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
-
-				pArgs.delRef();
-				// check if call succeeded
-				if (!result.isOk())
-					PyErr_Print();
-
-			}
-			else if (count == 2)
-			{
-				mvPyObject pArgs(PyTuple_New(2));
-				PyTuple_SetItem(pArgs, 0, ToPyString(sender));
-				PyTuple_SetItem(pArgs, 1, app_data); // steals data, so don't deref
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
-
-				pArgs.delRef();
-				// check if call succeeded
-				if (!result.isOk())
-					PyErr_Print();
-
-			}
-			else if (count == 1)
-			{
-				mvPyObject pArgs(PyTuple_New(1));
-				PyTuple_SetItem(pArgs, 0, ToPyString(sender));
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
+				mvPyObject result(PyObject_CallObject(callable, nullptr));
 
 				// check if call succeeded
 				if (!result.isOk())
@@ -227,12 +171,42 @@ void mvRunCallback(PyObject* callable, const std::string& sender, PyObject* app_
 			}
 			else
 			{
-				mvPyObject result(PyObject_CallObject(callable, nullptr));
 
+				bool isMethod = (bool)PyMethod_Check(callable);
+				mvPyObject pArgs(PyTuple_New(count));
+
+				if (isMethod)
+					PyTuple_SetItem(pArgs, 0, PyMethod_Self(callable));	
+				else
+					PyTuple_SetItem(pArgs, 0, ToPyString(sender));
+
+				if (count > 1)
+				{
+					if (isMethod)
+						PyTuple_SetItem(pArgs, 1, ToPyString(sender));
+					else
+						PyTuple_SetItem(pArgs, 1, app_data);
+				}
+
+				if (count > 2)
+				{
+					if (isMethod)
+						PyTuple_SetItem(pArgs, 2, app_data);
+					else
+						PyTuple_SetItem(pArgs, 2, user_data);
+				}
+
+				if (count > 3)
+				{
+					for (int i = 3; i < count; i++)
+						PyTuple_SetItem(pArgs, i, GetPyNone());
+				}
+
+				mvPyObject result(PyObject_CallObject(isMethod ? PyMethod_Function(callable) : callable, pArgs));
+				pArgs.delRef();
 				// check if call succeeded
 				if (!result.isOk())
 					PyErr_Print();
-
 
 			}
 			Py_DECREF(ac);
@@ -291,64 +265,9 @@ void mvRunCallback(PyObject* callable, mvUUID sender, PyObject* app_data, PyObje
 		if (ac) {
 			i32 count = PyLong_AsLong(ac);
 
-			if (PyMethod_Check(callable))
-				count--;
-
-			if (PyInstanceMethod_Check(callable))
-				count--;
-
-			if (count > 3)
+			if (count == 0)
 			{
-				mvPyObject pArgs(PyTuple_New(count));
-				PyTuple_SetItem(pArgs, 0, ToPyUUID(sender));
-				PyTuple_SetItem(pArgs, 1, app_data); // steals data, so don't deref
-				PyTuple_SetItem(pArgs, 2, user_data); // steals data, so don't deref
-					
-				for (int i = 3; i < count; i++)
-					PyTuple_SetItem(pArgs, i, GetPyNone());
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
-
-				// check if call succeeded
-				if (!result.isOk())
-					PyErr_Print();
-
-			}
-			else if (count == 3)
-			{
-				mvPyObject pArgs(PyTuple_New(3));
-				PyTuple_SetItem(pArgs, 0, ToPyUUID(sender));
-				PyTuple_SetItem(pArgs, 1, app_data); // steals data, so don't deref
-				PyTuple_SetItem(pArgs, 2, user_data); // steals data, so don't deref
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
-
-				pArgs.delRef();
-				// check if call succeeded
-				if (!result.isOk())
-					PyErr_Print();
-
-			}
-			else if (count == 2)
-			{
-				mvPyObject pArgs(PyTuple_New(2));
-				PyTuple_SetItem(pArgs, 0, ToPyUUID(sender));
-				PyTuple_SetItem(pArgs, 1, app_data); // steals data, so don't deref
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
-
-				pArgs.delRef();
-				// check if call succeeded
-				if (!result.isOk())
-					PyErr_Print();
-
-			}
-			else if(count == 1)
-			{
-				mvPyObject pArgs(PyTuple_New(1));
-				PyTuple_SetItem(pArgs, 0, ToPyUUID(sender));
-
-				mvPyObject result(PyObject_CallObject(callable, pArgs));
+				mvPyObject result(PyObject_CallObject(callable, nullptr));
 
 				// check if call succeeded
 				if (!result.isOk())
@@ -356,12 +275,42 @@ void mvRunCallback(PyObject* callable, mvUUID sender, PyObject* app_data, PyObje
 			}
 			else
 			{
-				mvPyObject result(PyObject_CallObject(callable, nullptr));
 
+				bool isMethod = (bool)PyMethod_Check(callable);
+				mvPyObject pArgs(PyTuple_New(count));
+
+				if (isMethod)
+					PyTuple_SetItem(pArgs, 0, PyMethod_Self(callable));
+				else
+					PyTuple_SetItem(pArgs, 0, ToPyUUID(sender));
+
+				if (count > 1)
+				{
+					if (isMethod)
+						PyTuple_SetItem(pArgs, 1, ToPyUUID(sender));
+					else
+						PyTuple_SetItem(pArgs, 1, app_data);
+				}
+
+				if (count > 2)
+				{
+					if (isMethod)
+						PyTuple_SetItem(pArgs, 2, app_data);
+					else
+						PyTuple_SetItem(pArgs, 2, user_data);
+				}
+
+				if (count > 3)
+				{
+					for (int i = 3; i < count; i++)
+						PyTuple_SetItem(pArgs, i, GetPyNone());
+				}
+
+				mvPyObject result(PyObject_CallObject(isMethod ? PyMethod_Function(callable) : callable, pArgs));
+				pArgs.delRef();
 				// check if call succeeded
 				if (!result.isOk())
 					PyErr_Print();
-
 
 			}
 			Py_DECREF(ac);
