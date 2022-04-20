@@ -164,6 +164,9 @@ void mvRunCallback(PyObject* callable, const std::string& sender, PyObject* app_
 			if (PyMethod_Check(callable))
 				count--;
 
+			if (PyInstanceMethod_Check(callable))
+				count--;
+
 			if (count > 3)
 			{
 				mvPyObject pArgs(PyTuple_New(count));
@@ -175,6 +178,7 @@ void mvRunCallback(PyObject* callable, const std::string& sender, PyObject* app_
 					PyTuple_SetItem(pArgs, i, GetPyNone());
 
 				mvPyObject result(PyObject_CallObject(callable, pArgs));
+				//mvPyObject result(PyObject_CallMethodObjArgs(callable, pArgs));
 
 				// check if call succeeded
 				if (!result.isOk())
@@ -288,6 +292,9 @@ void mvRunCallback(PyObject* callable, mvUUID sender, PyObject* app_data, PyObje
 			i32 count = PyLong_AsLong(ac);
 
 			if (PyMethod_Check(callable))
+				count--;
+
+			if (PyInstanceMethod_Check(callable))
 				count--;
 
 			if (count > 3)
