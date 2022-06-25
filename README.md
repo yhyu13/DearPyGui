@@ -71,6 +71,18 @@ Ensure you have at least Python 3.7 64bit.
  or
  pip3 install dearpygui
  ```
+
+ ## Build From Source
+
+ ### Windows
+
+ 1, Install latest cmake that support at least Visual Sutdio 2019
+
+ 2, The original window build toolchain uses VS2019, if you want to use VS2022, go change VS2019 related stuff to VS2022 in setup.py
+
+ 3, Add CMAKE bin folder to both windows system path and user path
+
+ 4, Run ```python .\setup.py bdist_wheel``` with at least python3.7 to build wheel.
  
 ## How to use?
  
